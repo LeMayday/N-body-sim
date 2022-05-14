@@ -16,7 +16,7 @@ public class Space extends JPanel implements ComponentListener, MouseListener, K
 	private double mass, xInitial, yInitial;
 	private int bodyRadius, increment;
 	private final int SDS, SMS, STS;
-	private Timer timer; // I wanted timer in the main file 
+	private Timer timer;
 	
 	public Space(JFrame frame, Dimension fs, CelestialBodies bs, SimCalculation sc, double[] vars, int[] scales){
 		mass = vars[1];
@@ -31,16 +31,16 @@ public class Space extends JPanel implements ComponentListener, MouseListener, K
 		bodies = bs;
 		simCalc = sc;
 		
-		frame.add(this); //adds panel to frame
+		frame.add(this);
 		frame.pack();
 		frame.setVisible(true);
-		frame.setLocationRelativeTo(null); //puts frame in center of screen
-		frame.addComponentListener(this); //adds component listen to detect resize
+		frame.setLocationRelativeTo(null); // puts frame in center of screen
+		frame.addComponentListener(this); // adds component listen to detect resize
 		
-		this.setFocusable(true); //sets space JPanel as something that can be focused
-		this.requestFocusInWindow(); //focuses on space for key listener
-		this.addKeyListener(this); //adds key listener to space
-		this.addMouseListener(this); //adds mouse listener to space
+		this.setFocusable(true); // sets space JPanel as something that can be focused
+		this.requestFocusInWindow(); // focuses on space for key listener
+		this.addKeyListener(this); // adds key listener to space
+		this.addMouseListener(this); // adds mouse listener to space
 		this.setBackground(Color.black); 
 		this.setLayout(null);
 		this.setBounds(0, 0, frameSize.width, frameSize.height); //sets size of space
@@ -54,20 +54,20 @@ public class Space extends JPanel implements ComponentListener, MouseListener, K
 		
 		// earth moon
 		bodies.add(new Vector2D(500,500), new Vector2D(), 5.972E-3, 3, new Color(107, 164, 255));
-		bodies.add(new Vector2D(700,500), new Vector2D(), 7.348E-5, 3, new Color(107, 164, 255));
+		bodies.add(new Vector2D(884.4,500), new Vector2D(0, 0.001022 * Math.pow(10, STS)), 7.348E-5, 3, new Color(107, 164, 255));
 		
 		timer = new Timer(1, this);
 		timer.start();
 	}
 	
-	@Override //overrides JPanel paint method (I think)
+	@Override // overrides JPanel paint method
 	public void paint(Graphics g){
 		super.paint(g); //super for JPanel
 		Graphics2D g2D = (Graphics2D) g;
 		
 		calculate(); // do calculations
 		
-		for (int i = 0; i < bodies.size; i++){ //draws bodies
+		for (int i = 0; i < bodies.size; i++){ // draws bodies
 			Vector2D bodyPos = bodies.getPos(i);
 			
 			g2D.setColor(bodies.getColor(i));
@@ -88,7 +88,7 @@ public class Space extends JPanel implements ComponentListener, MouseListener, K
 		calcThread.start();
 		
 		// must wait for all threads to finish before moving on so that bodies
-		//are not drawn before calculations are completed
+		// are not drawn before calculations are completed
 		try {
 			calcThread.join();
 		} catch (InterruptedException e1) {
@@ -99,38 +99,35 @@ public class Space extends JPanel implements ComponentListener, MouseListener, K
 	
 	@Override
 	public void keyPressed(KeyEvent e) {
-		bodies.incrementPositions(e, increment); //passes key event to body where the increments are made directly to position info
+		bodies.incrementPositions(e, increment); 
 	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		xInitial = e.getX(); //gets initial coordinates of mouse press
+		xInitial = e.getX(); // gets initial coordinates of mouse press
 		yInitial = e.getY();
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		int xFinal = e.getX(); //gets final coordinates of mouse press -- initial coordinates are subtracted to get velocity
+		int xFinal = e.getX(); // gets final coordinates of mouse press
 		int yFinal = e.getY();
 		
-		double SVS = 0; //defined here since this is the only place velocity needs to be scaled
-		double xVel = xFinal - xInitial;
+		double xVel = xFinal - xInitial; // initial coordinates are subtracted to get velocity
 		double yVel = yFinal - yInitial;
-		double velFac = Math.pow(10, SVS); // arbitrary values determined through experimentation
-		System.out.println(velFac);
+		double velFac = 0.002; // arbitrary value determined through experimentation
 		
 		int r = (int)(Math.random()*155 + 100);
 		int g = (int)(Math.random()*155 + 100);
 		int b = (int)(Math.random()*155 + 100);
 		
 		bodies.add(new Vector2D(xInitial, yInitial), new Vector2D(xVel*velFac, yVel*velFac), mass, bodyRadius, new Color(r, g, b));
-		System.out.println(bodies.getVel(2).mag);
 	}
 
 	@Override
 	public void componentResized(ComponentEvent e) {
 		frameSize = e.getComponent().getBounds().getSize();
-		this.setBounds(0, 0, frameSize.width, frameSize.height); //resets size of space JPanel to be consistent with size of frame
+		this.setBounds(0, 0, frameSize.width, frameSize.height); // resets size of space JPanel to be consistent with size of frame
 				
 		for (Component comp : this.getComponents()) {
 			if (comp instanceof SliderPanel) {
@@ -145,7 +142,8 @@ public class Space extends JPanel implements ComponentListener, MouseListener, K
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-				
+		// could have timer in SliderPanel, but I wanted it to be in a more widely used
+		// file in case of future need of timer
 		if (e.getSource() == timer){
 			sliderPanel.actionPerformed(e);
 		}

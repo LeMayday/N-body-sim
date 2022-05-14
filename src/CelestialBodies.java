@@ -2,11 +2,11 @@ import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
-//CelestialBodies class is meant to act as an array of all bodies
+// CelestialBodies class is meant to act as an array of all bodies
 public class CelestialBodies {
 	public int size;
 	
-	//arrays of body properties
+	// arrays of body properties
 	private ArrayList<Vector2D> positions = new ArrayList<Vector2D>();
 	private ArrayList<Vector2D> velocities = new ArrayList<Vector2D>();
 	private ArrayList<Double> masses = new ArrayList<Double>();
@@ -19,7 +19,7 @@ public class CelestialBodies {
 		size = 0;
 	}
 	
-	//add body
+	// add body
 	public void add(Vector2D pos, Vector2D vel, double mass, int radius, Color color){
 		positions.add(pos);
 		velocities.add(vel);
@@ -31,7 +31,7 @@ public class CelestialBodies {
 		size++;
 	}
 	
-	//removes all bodies
+	// removes all bodies
 	public void clear() {
 		while (size > 0){
 			positions.remove(0);
@@ -54,7 +54,7 @@ public class CelestialBodies {
 		velocities = newVel;
 	}
 	
-	//get functions are meant to fetch data for one particular body
+	// get functions are meant to fetch data for one particular body
 	public Vector2D getPos(int index) {
 		return positions.get(index);
 	}
@@ -80,7 +80,7 @@ public class CelestialBodies {
 		return colors.get(index);
 	}
 	
-	//moves bodies all uniformly in direction dictated by WASD keys
+	// moves bodies all uniformly in direction dictated by WASD keys
 	public void incrementPositions(KeyEvent e, double incrementFactor){
 		for(int i = 0; i < size; i++) {
 			switch(e.getKeyCode()){

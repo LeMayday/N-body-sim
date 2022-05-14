@@ -19,20 +19,20 @@ public class SimCalculation implements Runnable {
 		// so Gsim (SDU^3/(SMU*STU^2)) = G * (1e-SDS)^3 * 1eSMS * (1eSTS)^2
 	}
 	
-	//sets global variables to be used in run method (which cannot accept arguments)
+	// sets global variables to be used in run method (which cannot accept arguments)
 	public void setData(double dt) { 
 		this.dt = dt;
 	}
 	
 	@Override
-	public void run() { //just does math, no collisions yet
+	public void run() { // just does math, no collisions yet
 		ArrayList<Vector2D> newPositions = new ArrayList<Vector2D>();
 		ArrayList<Vector2D> newVelocities = new ArrayList<Vector2D>();
 		double t = dt * Math.pow(10, STS); // convert time in seconds to STU
 		
 		for (int i = 0; i < bodies.size; i++) {
 			// i is index of body on which force is being calculated
-			Vector2D bodyPos = bodies.getPos(i); //define local variables to avoid excessive method calls
+			Vector2D bodyPos = bodies.getPos(i); // define local variables to avoid excessive method calls
 			Vector2D bodyVel = bodies.getVel(i);
 			
 			// using Euler-Cromer Method
@@ -45,9 +45,9 @@ public class SimCalculation implements Runnable {
 				
 				if (i != j){ //don't calculate force on same body
 					Vector2D dist = bodies.getPos(j).plus(newPos.sprod(-1)); // vector from i to j (specifically j - i)
-					double r = dist.mag;
-					double a = G  * bodies.getMass(j) / (r * r); //represents magnitude of force per object
-					accel.plusEq(dist.sprodEq(a / dist.mag)); //adds accel component of mag a in direction of unit vector of dist
+					double r = dist.findMag();
+					double a = G  * bodies.getMass(j) / (r * r); // represents magnitude of force per object
+					accel.plusEq(dist.sprodEq(a / r)); // adds accel component of mag a in direction of unit vector of dist
 				}
 			}
 			
