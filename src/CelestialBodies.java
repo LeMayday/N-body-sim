@@ -3,6 +3,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 // CelestialBodies class is meant to act as an array of all bodies
+
 public class CelestialBodies {
 	public int size;
 	

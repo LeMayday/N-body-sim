@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 
+// SimCalculation is where the physics is performed
+
 public class SimCalculation implements Runnable {
 	
 	private CelestialBodies bodies;
