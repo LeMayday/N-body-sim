@@ -45,7 +45,7 @@ public class SimCalculation implements Runnable {
 			for (int j = 0; j < bodies.size; j++){ 
 				// j is index of body being used to calculate acceleration
 				
-				if (i != j){ //don't calculate force on same body
+				if (i != j){ // don't calculate force on same body
 					Vector2D dist = bodies.getPos(j).plus(newPos.sprod(-1)); // vector from i to j (specifically j - i)
 					double r = dist.findMag();
 					double a = G  * bodies.getMass(j) / (r * r); // represents magnitude of force per object

@@ -15,7 +15,12 @@ public class AppFrame extends JFrame {
 	public InstructionPanel iPanel;
 	public TimePanel tPanel;
 	private Dimension frameSize;
+	private Timer timer;
+	private boolean simRunning = true;
+	private boolean iPanelOn = true;
+	private boolean sPanelOn = true;
 	
+	// constructor initializes window and sub components and starts simulation timer
 	public AppFrame(CelestialBodies bs, SimCalculation sc, double[] vars, int[] scales) {
 		
 		// get screen dimensions to size frame appropriately
@@ -32,10 +37,10 @@ public class AppFrame extends JFrame {
 		sPanel = new SliderPanel(this, bs, vars, scales);
 		sPanel.setLocation(frameSize.width - sPanel.getWidth() - 50, frameSize.height - sPanel.getHeight() - 50);
 		
-		iPanel = new InstructionPanel(this, scales);
+		iPanel = new InstructionPanel(scales);
 		iPanel.setLocation(50, frameSize.height - iPanel.getHeight() - 75);
 		
-		tPanel = new TimePanel(this);
+		tPanel = new TimePanel();
 		tPanel.setLocation(frameSize.width - tPanel.getWidth() - 50, 50);
 		
 		space = new Space(this, bs, sc, vars, scales);
@@ -51,8 +56,49 @@ public class AppFrame extends JFrame {
 		this.setLocationRelativeTo(null); // puts frame in center of screen
 		this.addComponentListener(new ComponentManager()); // adds component listen to detect resize
 		
-		Timer timer = new Timer(10, space);
+		timer = new Timer(10, space);
 		timer.start();
+	}
+	
+	// allows other classes to get simRunning status
+	public boolean simRunning() {
+		return simRunning;
+	}
+	
+	// toggles simulation pause and manages changes in components
+	public void togglePause() {
+		if (simRunning) {
+			simRunning = false;
+			tPanel.togglePaused(simRunning);
+		}
+		else {
+			simRunning = true;
+			tPanel.togglePaused(simRunning);
+		}
+	}
+	
+	// toggles instruction panel visibility
+	public void toggleInstructionPanel() {
+		if (iPanelOn) {
+			space.remove(iPanel);
+			iPanelOn = false;
+		}
+		else {
+			space.add(iPanel);
+			iPanelOn = true;
+		}
+	}
+	
+	// toggles slider panel visibility
+	public void toggleSliderPanel() {
+		if (sPanelOn) {
+			space.remove(sPanel);
+			sPanelOn = false;
+		}
+		else {
+			space.add(sPanel);
+			sPanelOn = true;
+		}
 	}
 	
 	// for documentation about adapters, see https://docs.oracle.com/javase/tutorial/uiswing/events/generalrules.html
@@ -60,7 +106,6 @@ public class AppFrame extends JFrame {
 		
 		// resets size and location of sub panels to be consistent with size of frame
 		public void componentResized(ComponentEvent e) {
-			
 			frameSize = e.getComponent().getBounds().getSize();
 			space.setBounds(0, 0, frameSize.width, frameSize.height);
 			sPanel.setLocation(frameSize.width - sPanel.getWidth() - 50, frameSize.height - sPanel.getHeight() - 50);

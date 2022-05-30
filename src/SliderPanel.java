@@ -24,6 +24,7 @@ public class SliderPanel extends JPanel implements ChangeListener, ActionListene
 	private double dt, mass;
 	private final double SMS;
 	
+	// constructor initializes slider panel
 	public SliderPanel(AppFrame af, CelestialBodies bs, double[] vars, int[] factors) {
 		frame = af;
 		bodies = bs;
@@ -33,6 +34,7 @@ public class SliderPanel extends JPanel implements ChangeListener, ActionListene
 		
 		this.setBackground(Color.black);
 		this.setSize(new Dimension(width, height));
+		this.setOpaque(false);
 		
 		sliders();
 		labels();
@@ -48,6 +50,7 @@ public class SliderPanel extends JPanel implements ChangeListener, ActionListene
 		this.add(generateButton);
 	}
 
+	// detects changes in sliders and updates other classes
 	@Override
 	public void stateChanged(ChangeEvent e) {
 		if (e.getSource().equals(dtSlider)){
@@ -60,12 +63,11 @@ public class SliderPanel extends JPanel implements ChangeListener, ActionListene
 		}
 		frame.space.setVars(dt, mass);
 		frame.space.requestFocusInWindow(); // rerequests focus on space so it can continue to receive key events
-		
 	}
-
+	
+	// detects button presses and performs respective actions
 	@Override
 	public void actionPerformed(ActionEvent e) {
-
 		if (e.getSource() == clearButton){
 			bodies.clear();
 		}
@@ -81,19 +83,20 @@ public class SliderPanel extends JPanel implements ChangeListener, ActionListene
 			}
 		}
 		frame.space.requestFocusInWindow();
-		
 	}
 	
+	// updates bodies label (called from Space)
 	public void updateLabel() {
 		bodiesLabel.setText("Bodies Remaining: " + bodies.size);
 	}
 	
+	// these methods initialize sliders, labels, and buttons
 	private void sliders() {
 		//(int)Math.log10(dt)*10
 		dtSlider = new JSlider(-10, 20, 0);
 		dtSlider.setPreferredSize(new Dimension(200,50));
-		dtSlider.setBackground(Color.black);
 		dtSlider.setForeground(Color.white);
+		dtSlider.setOpaque(false);
 		dtSlider.setPaintTrack(true);
 		dtSlider.setMajorTickSpacing(10);
 		dtSlider.setPaintLabels(true);
@@ -103,8 +106,8 @@ public class SliderPanel extends JPanel implements ChangeListener, ActionListene
 		int msub = (int)SMS + 5; // mass slider upper bound
 		massSlider = new JSlider(mslb, msub, (int)SMS);
 		massSlider.setPreferredSize(new Dimension(200,50));
-		massSlider.setBackground(Color.black);
 		massSlider.setForeground(Color.white);
+		massSlider.setOpaque(false);
 		massSlider.setPaintTrack(true);
 		massSlider.setMajorTickSpacing(1);
 		massSlider.setPaintLabels(true);

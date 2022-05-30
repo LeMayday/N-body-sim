@@ -22,6 +22,7 @@ public class Space extends JPanel implements ActionListener {
 	private int bodyRadius, increment;
 	private final int SDS, SMS, STS;
 	
+	// constructor initializes space panel
 	public Space(AppFrame af, CelestialBodies bs, SimCalculation sc, double[] vars, int[] scales){
 		frame = af;
 		
@@ -54,11 +55,14 @@ public class Space extends JPanel implements ActionListener {
 	}
 	
 	@Override // overrides JPanel paint method
-	public void paint(Graphics g){
-		super.paint(g); //super for JPanel
+	public void paintComponent(Graphics g){
+		super.paintComponent(g); //super for JPanel
 		Graphics2D g2D = (Graphics2D) g;
 		
-		calculate(); // do calculations
+		if (frame.simRunning()) {
+			calculate(); // do calculations
+			time += dt;
+		}
 		
 		for (int i = 0; i < bodies.size; i++){ // draws bodies
 			Vector2D bodyPos = bodies.getPos(i);
@@ -69,6 +73,7 @@ public class Space extends JPanel implements ActionListener {
 	
 	}
 	
+	// updates mass and dt from sliders
 	public void setVars(double t, double m) {
 		dt = t;
 		simCalc.setData(dt);
@@ -90,14 +95,12 @@ public class Space extends JPanel implements ActionListener {
 		}
 		//System.out.println("active threads: " + Thread.activeCount()); // print statement to check if only 2 threads are active
 	}
-
+	
+	// updates labels and paints the frame based on timer
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// could have timer in SliderPanel, but I wanted it to be in a more widely used
-		// file in case of future need of timer
 		if (e.getSource() instanceof Timer){
 			frame.sPanel.updateLabel();
-			time += dt;
 			frame.tPanel.updateLabel(time);
 			repaint();
 		}
@@ -125,7 +128,6 @@ public class Space extends JPanel implements ActionListener {
 			int b = (int)(Math.random()*155 + 100);
 			
 			bodies.add(new Vector2D(xInitial, yInitial), new Vector2D(xVel*velFac, yVel*velFac), mass, bodyRadius, new Color(r, g, b));
-			
 		}
 		
 	}
@@ -133,9 +135,24 @@ public class Space extends JPanel implements ActionListener {
 	private class KeyManager extends KeyAdapter {
 		
 		public void keyPressed(KeyEvent e) {
-			bodies.incrementPositions(e, increment); 
+			// only perform key actions if sim is not paused
+			switch(e.getKeyCode()){
+			case KeyEvent.VK_SPACE:
+				frame.togglePause();
+				break;
+			case KeyEvent.VK_I:
+				frame.toggleInstructionPanel();
+				break;
+			case KeyEvent.VK_O:
+				frame.toggleSliderPanel();
+				break;
+			default:
+				if (frame.simRunning()) {
+					bodies.incrementPositions(e, increment);
+				}
+			}
 		}
-		
+	
 	}
 	
 }
