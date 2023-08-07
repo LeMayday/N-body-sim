@@ -8,8 +8,10 @@ public class CelestialBodies {
 	public int size;
 	
 	// arrays of body properties
-	private ArrayList<Vector2D> positions = new ArrayList<Vector2D>();
-	private ArrayList<Vector2D> velocities = new ArrayList<Vector2D>();
+	public ArrayList<Vector2D> oldPos = new ArrayList<Vector2D>();
+	public ArrayList<Vector2D> oldVels = new ArrayList<Vector2D>();
+	public ArrayList<Vector2D> currPos = new ArrayList<Vector2D>();
+	public ArrayList<Vector2D> currVels = new ArrayList<Vector2D>();
 	private ArrayList<Double> masses = new ArrayList<Double>();
 	private ArrayList<Double> volumes = new ArrayList<Double>();
 	private ArrayList<Color> colors = new ArrayList<Color>();
@@ -22,8 +24,10 @@ public class CelestialBodies {
 	
 	// add body
 	public void add(Vector2D pos, Vector2D vel, double mass, int radius, Color color){
-		positions.add(pos);
-		velocities.add(vel);
+		oldPos.add(pos);
+		oldVels.add(vel);
+		currPos.add(pos);
+		currVels.add(vel);
 		masses.add(mass);
 		volumes.add( (4/3.0)*Math.PI*Math.pow(radius, 4) ); //volume done with power of 4 to further decrease rate at which particles gain size
 		colors.add(color);
@@ -35,8 +39,10 @@ public class CelestialBodies {
 	// removes all bodies
 	public void clear() {
 		while (size > 0){
-			positions.remove(0);
-			velocities.remove(0);
+			oldPos.remove(0);
+			oldVels.remove(0);
+			currPos.remove(0);
+			currVels.remove(0);
 			masses.remove(0);
 			volumes.remove(0);
 			colors.remove(0);
@@ -46,22 +52,13 @@ public class CelestialBodies {
 		}
 	}
 	
-	// set functions to update new positions and velocities 
-	public void setPos(ArrayList<Vector2D> newPos) {
-		positions = newPos; //shallow copy since newPos is a new ArrayList made in SimCalculation
-	}
-	
-	public void setVel(ArrayList<Vector2D> newVel) {
-		velocities = newVel;
-	}
-	
 	// get functions are meant to fetch data for one particular body
 	public Vector2D getPos(int index) {
-		return positions.get(index);
+		return currPos.get(index);
 	}
 	
 	public Vector2D getVel(int index) {
-		return velocities.get(index);
+		return currVels.get(index);
 	}
 	
 	public double getMass(int index) {
@@ -86,16 +83,16 @@ public class CelestialBodies {
 		for(int i = 0; i < size; i++) {
 			switch(e.getKeyCode()){
 			case KeyEvent.VK_W:
-				positions.get(i).plusEq(new Vector2D(0, incrementFactor));
+				currPos.get(i).plusEq(new Vector2D(0, incrementFactor));
 				break;
 			case KeyEvent.VK_S:
-				positions.get(i).plusEq(new Vector2D(0, -incrementFactor));
+				currPos.get(i).plusEq(new Vector2D(0, -incrementFactor));
 				break;
 			case KeyEvent.VK_D:
-				positions.get(i).plusEq(new Vector2D(-incrementFactor, 0));
+				currPos.get(i).plusEq(new Vector2D(-incrementFactor, 0));
 				break;
 			case KeyEvent.VK_A:
-				positions.get(i).plusEq(new Vector2D(incrementFactor, 0));
+				currPos.get(i).plusEq(new Vector2D(incrementFactor, 0));
 				break;
 			}
 		}

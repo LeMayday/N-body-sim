@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.datatransfer.SystemFlavorMap;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -53,14 +54,15 @@ public class Space extends JPanel implements ActionListener {
 		bodies.add(new Vector2D(500,500), new Vector2D(), 5.972, 3, new Color(107, 164, 255));
 		bodies.add(new Vector2D(884.4,500), new Vector2D(0, -0.001022 * Math.pow(10, STS)), 7.348E-2, 3, new Color(107, 164, 255));
 	}
-	
+	long t1 = System.nanoTime();
 	@Override // overrides JPanel paint method
 	public void paintComponent(Graphics g){
 		super.paintComponent(g); //super for JPanel
 		Graphics2D g2D = (Graphics2D) g;
 		
 		if (frame.simRunning()) {
-			calculate(); // do calculations
+			simCalc.run();
+			//calculate(); // do calculations
 			time += dt;
 		}
 		
@@ -70,7 +72,8 @@ public class Space extends JPanel implements ActionListener {
 			g2D.setColor(bodies.getColor(i));
 			g2D.fillOval((int)(bodyPos.x - bodies.getRadius(i)), (int)(bodyPos.y - bodies.getRadius(i)), bodies.getRadius(i)*2, bodies.getRadius(i)*2);
 		}
-	
+		System.out.println(System.nanoTime()-t1);
+		t1 = System.nanoTime();
 	}
 	
 	// updates mass and dt from sliders
@@ -83,16 +86,18 @@ public class Space extends JPanel implements ActionListener {
 	// method to manage threads so it is not in paint()
 	private void calculate() {
 		// good to note that 2 thread are running normally, one for main and one for swing
-		Thread calcThread = new Thread(simCalc);
-		calcThread.start();
+		//Thread calcThread = new Thread(simCalc);
+		//calcThread.start();
 		
 		// must wait for all threads to finish before moving on so that bodies
 		// are not drawn before calculations are completed
+		/*
 		try {
 			calcThread.join();
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
+		*/
 		//System.out.println("active threads: " + Thread.activeCount()); // print statement to check if only 2 threads are active
 	}
 	
