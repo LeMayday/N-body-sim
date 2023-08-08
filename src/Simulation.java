@@ -16,13 +16,14 @@ public class Simulation implements ActionListener{
 	public long iters = 0;
 	private Timer timer = new Timer(1, this);;
 	private boolean isRunning = false;
+	public AppFrame frame;
 	public Space space;
 	public CelestialBodies bodies;
 	private byte increment = 5;
 	//conversion exponents
-	private final int SDS = 6; 	// simulation distance scale, 1 pixel (SDU) = 1e[SDS] m
-	private final int SMS = 24; // simulation mass scale, 1 SMU = 1e[SMS] kg
-	private final int STS = 3; 	// simulation time scale, 1 STU = 1e[STS] s
+	public final int SDS = 6; 	// simulation distance scale, 1 pixel (SDU) = 1e[SDS] m
+	public final int SMS = 24; 	// simulation mass scale, 1 SMU = 1e[SMS] kg
+	public final int STS = 2; 	// simulation time scale, 1 STU = 1e[STS] s
 	
 	private ExecutorService service = Executors.newSingleThreadExecutor();
 	private WorkTask task = new WorkTask(this);
@@ -30,7 +31,7 @@ public class Simulation implements ActionListener{
 	public Simulation() {
 		bodies = new CelestialBodies(this, new int[] {SDS, SMS, STS});
 		space = new Space(this);
-		new AppFrame(this);
+		frame = new AppFrame(this);
 		space.addKeyListener(new KeyManager()); // adds key listener to space
 		//space.addMouseListener(new MouseManager()); // adds mouse listener to space
 		

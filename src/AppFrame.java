@@ -39,6 +39,10 @@ public class AppFrame extends JFrame {
 		this.addComponentListener(new ComponentManager()); // adds component listen to detect resize
 	}
 	
+	public Dimension getFrameSize() {
+		return frameSize;
+	}
+	
 	// for documentation about adapters, see https://docs.oracle.com/javase/tutorial/uiswing/events/generalrules.html
 	private class ComponentManager extends ComponentAdapter {
 		

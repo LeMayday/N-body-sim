@@ -10,7 +10,7 @@ import java.awt.event.KeyEvent;
 
 public class CelestialBodies {
 	public int size = 0;
-	public int radius = 3;
+	public int radius = 2;
 	
 	// arrays of body properties
 	// Q is a generalized coordinate
@@ -19,8 +19,8 @@ public class CelestialBodies {
 	private double[] Pq1 = new double[size];
 	private double[] Pq2 = new double[size];
 	// store forces globally to prevent creating new arrays all the time
-	private double[] Fq1 = new double[size];
-	private double[] Fq2 = new double[size];
+	public double[] Fq1 = new double[size];
+	public double[] Fq2 = new double[size];
 	//private double[] H = new double[size];
 	
 	private double[] masses = new double[size];
@@ -103,17 +103,21 @@ public class CelestialBodies {
 	// compute force on body index from all other bodies and add it to forces array
 	private void computeForcesOnBody(int i) {
 		// contribution from body j
+		double distQ1 = 0, distQ2 = 0, r = 0, gradUq1 = 0, gradUq2 = 0;
 		for (int j = 0; j < size; j++) {
 			if (i != j) {
-				double distQ1 = Q1[j] - Q1[i];
-				double distQ2 = Q2[j] - Q2[i];
-				double r = Math.sqrt(distQ1*distQ1 + distQ2*distQ2);
+				distQ1 = Q1[j] - Q1[i];
+				distQ2 = Q2[j] - Q2[i];
+				r = Math.sqrt(distQ1*distQ1 + distQ2*distQ2);
+				r = Math.max(1.0, r);
 				
-				Fq1[i] = G * masses[j] * masses[i] / (r * r * r) * distQ1;
-				Fq2[i] = G * masses[j] * masses[i] / (r * r * r) * distQ2;
+				gradUq1 += G * masses[j] * masses[i] / (r * r * r) * distQ1;
+				gradUq2 += G * masses[j] * masses[i] / (r * r * r) * distQ2;
 				
 				//H[i] = 1/(2*masses[i])*(Pq1[i]*Pq1[i] + Pq2[i]*Pq2[i]) - G*masses[j]*masses[i]/r;
 			}
+			Fq1[i] = gradUq1;
+			Fq2[i] = gradUq2;
 		}
 	}
 	
