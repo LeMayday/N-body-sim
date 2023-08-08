@@ -13,18 +13,10 @@ public class Space extends JPanel {
 	// constructor initializes space panel
 	public Space(Simulation s){
 		bodies = s.bodies;
-		
 		this.setFocusable(true); // sets space JPanel as something that can be focused
 		this.requestFocusInWindow(); // focuses on space for key listener
-		
-		//this.addMouseListener(new MouseManager()); // adds mouse listener to space
 		this.setBackground(Color.black); 
 		this.setLayout(null);
-		
-		// test bodies
-		//bodies.add(new Vector2D(500,500), new Vector2D(), 1E3, 3, new Color(107, 164, 255));
-		//bodies.add(new Vector2D(700,500), new Vector2D(), 1E3, 3, new Color(107, 164, 255));
-		
 	}
 	
 	@Override // overrides JPanel paint method

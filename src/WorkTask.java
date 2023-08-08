@@ -1,4 +1,6 @@
 
+// WorkTask is run by threads and calls integration methods in CelestialBodies
+
 public class WorkTask implements Runnable {
 
 	private Simulation sim;

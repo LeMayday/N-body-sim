@@ -6,6 +6,8 @@ import java.awt.event.KeyEvent;
 // https://en.wikipedia.org/wiki/Gravitational_energy
 // https://en.wikipedia.org/wiki/Leapfrog_integration
 
+// CelestialBodies stores all information for each body and performs integration
+
 public class CelestialBodies {
 	public int size = 0;
 	public int radius = 3;
@@ -19,9 +21,9 @@ public class CelestialBodies {
 	// store forces globally to prevent creating new arrays all the time
 	private double[] Fq1 = new double[size];
 	private double[] Fq2 = new double[size];
-	private double[] H = new double[size];
+	//private double[] H = new double[size];
 	
-	private double[] masses = new double[0];
+	private double[] masses = new double[size];
 	
 	private final double G;
 	private final int SDS, SMS, STS, SGS; // SGS is simulation gravitational scale
@@ -57,11 +59,23 @@ public class CelestialBodies {
 		Pq2 = push(Pq2, 0);
 		Fq1 = push(Fq1, 0);
 		Fq2 = push(Fq2, 0);
-		H = push(H, 0);
+		//H = push(H, 0);
 		// can now access array at size since arrays are bigger
 		initializeMomenta(size, params[2], params[3]);
 		// increment size
 		size++;
+	}
+	
+	public void clear() {
+		size = 0;
+		Q1 = new double[size];
+		Q2 = new double[size];
+		Pq1 = new double[size];
+		Pq2 = new double[size];
+		Fq1 = new double[size];
+		Fq2 = new double[size];
+		//H = new double[size];
+		masses = new double[size];
 	}
 	
 	public double getQ1(int index) {
@@ -98,7 +112,7 @@ public class CelestialBodies {
 				Fq1[i] = G * masses[j] * masses[i] / (r * r * r) * distQ1;
 				Fq2[i] = G * masses[j] * masses[i] / (r * r * r) * distQ2;
 				
-				H[i] = 1/(2*masses[i])*(Pq1[i]*Pq1[i] + Pq2[i]*Pq2[i]) - G*masses[j]*masses[i]/r;
+				//H[i] = 1/(2*masses[i])*(Pq1[i]*Pq1[i] + Pq2[i]*Pq2[i]) - G*masses[j]*masses[i]/r;
 			}
 		}
 	}
@@ -112,11 +126,13 @@ public class CelestialBodies {
 			Q1[i] += Pq1[i] / masses[i] * sim.dt;
 			Q2[i] += Pq2[i] / masses[i] * sim.dt;
 		}
+		/*
 		if (size >= 2) {
 			System.out.println(H[0] + H[1]);
-			//System.out.println(Pq1[1] + " " + Pq2[1]);
-			//System.out.println(Fq1[1] + " " + Fq2[1]);
+			System.out.println(Pq1[1] + " " + Pq2[1]);
+			System.out.println(Fq1[1] + " " + Fq2[1]);
 		}
+		*/
 	}
 	
 	// push one element to end of oldArr
@@ -130,18 +146,7 @@ public class CelestialBodies {
 		
 		return tempArr;
 	}
-	
-	// pop one element from end of oldArr
-	private double[] pop(double[] oldArr) {
-		double[] tempArr = new double[size - 1];
-		
-		for (int i = 0; i < size - 1; i++) {
-			tempArr[i] = oldArr[i];
-		}
-		
-		return tempArr;
-	}
-	
+	/*	
 	// delete an element at a specific index
 	private double[] delete(double[] oldArr, int index) {
 		double[] tempArr = new double[size - 1];
@@ -155,7 +160,7 @@ public class CelestialBodies {
 		
 		return tempArr;
 	}
-	
+	*/
 	// moves bodies all uniformly in direction dictated by WASD keys
 	public void incrementPositions(KeyEvent e, byte increment){
 		for(int i = 0; i < size; i++) {

@@ -6,15 +6,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import javax.swing.Timer;
+
+// Simulation stores global variables and interfaces between computation and display
 
 public class Simulation implements ActionListener{
 
 	public double dt = 1.0;
 	public long iters = 0;
 	private Timer timer = new Timer(1, this);;
-	private boolean simRunning = false;
+	private boolean isRunning = false;
 	public Space space;
 	public CelestialBodies bodies;
 	private byte increment = 5;
@@ -36,11 +37,10 @@ public class Simulation implements ActionListener{
 		// earth moon
 		bodies.addBody(new double[]{500, 500, 0, 0, 5.972});
 		bodies.addBody(new double[]{884.4, 500, 0, (-1023 * Math.pow(10,  STS - SDS))*7.348E-2, 7.348E-2});
-		//-0.001022 * Math.pow(10,  STS)
 	}
 	
 	public void start() {
-		simRunning = true;
+		isRunning = true;
 		timer.start();
 	}
 
@@ -53,17 +53,17 @@ public class Simulation implements ActionListener{
 	}
 	
 	public boolean isRunning() {
-		return simRunning;
+		return isRunning;
 	}
 	
 	// toggles simulation pause and manages changes in components
 	public void togglePause() {
-		if (simRunning) {
-			simRunning = false;
+		if (isRunning) {
+			isRunning = false;
 			//tPanel.togglePaused(simRunning);
 		}
 		else {
-			simRunning = true;
+			isRunning = true;
 			//tPanel.togglePaused(simRunning);
 		}
 	}
