@@ -50,20 +50,34 @@ public class CelestialBodies {
 	
 	// add body
 	// params is of the form [Q1, Q2, Pq1, Pq2, mass]
-	public void addBody(double[] params) {
+	public void addBody(double[] params, boolean initializeAll) {
 		Q1 = push(Q1, params[0]);
 		Q2 = push(Q2, params[1]);
+		// momenta are initialized later to step - 1/2
+		Pq1 = push(Pq1, params[2]);
+		Pq2 = push(Pq2, params[3]);
 		masses = push(masses, params[4]);
 		// add placeholder to other arrays
-		Pq1 = push(Pq1, 0);
-		Pq2 = push(Pq2, 0);
 		Fq1 = push(Fq1, 0);
 		Fq2 = push(Fq2, 0);
 		//H = push(H, 0);
-		// can now access array at size since arrays are bigger
-		initializeMomenta(size, params[2], params[3]);
+		
+		// initializes momenta for one body if they are added later
+		// if bodies are all added at the beginning, want to initialize momenta together
+		if (!initializeAll) {
+			initializeMomenta(size);
+		}
 		// increment size
 		size++;
+	}
+	
+	// initializes all momenta after all bodies have been added
+	public void initializeAllMomenta() {
+		for (int i = 0; i < size; i++) {
+			//System.out.println(Pq1[i] + " " + Pq2[i]);
+			initializeMomenta(i);
+			//System.out.println(Pq1[i] + " " + Pq2[i]);
+		}
 	}
 	
 	public void clear() {
@@ -86,12 +100,12 @@ public class CelestialBodies {
 		return Q2[index];
 	}
 	
-	private void initializeMomenta(int index, double Pq1_0, double Pq2_0) {
+	private void initializeMomenta(int index) {
 		// https://young.physics.ucsc.edu/115/leapfrog.pdf pg 3 (bottom)
 		// momenta are given for t = 0, so need to do a half step of Euler to get t = -1/2
 		computeForcesOnBody(index);
-		Pq1[index] = Pq1_0 - 0.5 * Fq1[index] * sim.dt;
-		Pq2[index] = Pq2_0 - 0.5 * Fq2[index] * sim.dt;
+		Pq1[index] -= 0.5 * Fq1[index] * sim.dt;
+		Pq2[index] -= 0.5 * Fq2[index] * sim.dt;
 	}
 	
 	// pseudo-code:
@@ -116,9 +130,10 @@ public class CelestialBodies {
 				
 				//H[i] = 1/(2*masses[i])*(Pq1[i]*Pq1[i] + Pq2[i]*Pq2[i]) - G*masses[j]*masses[i]/r;
 			}
-			Fq1[i] = gradUq1;
-			Fq2[i] = gradUq2;
 		}
+		Fq1[i] = gradUq1;
+		Fq2[i] = gradUq2;
+		//System.out.println(i + " " + Fq1[i] + " " + Fq2[i]);
 	}
 	
 	// increment qi and pqi according to leapfrog method
@@ -128,7 +143,7 @@ public class CelestialBodies {
 			Pq1[i] += Fq1[i] * sim.dt;
 			Pq2[i] += Fq2[i] * sim.dt;
 			Q1[i] += Pq1[i] / masses[i] * sim.dt;
-			Q2[i] += Pq2[i] / masses[i] * sim.dt;
+			Q2[i] += Pq2[i] / masses[i] * sim.dt;			
 		}
 		/*
 		if (size >= 2) {

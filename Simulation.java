@@ -12,7 +12,7 @@ import javax.swing.Timer;
 
 public class Simulation implements ActionListener{
 
-	public double dt = 1.0;
+	public double dt = 10.0;
 	public long iters = 0;
 	private Timer timer = new Timer(1, this);;
 	private boolean isRunning = false;
@@ -35,9 +35,25 @@ public class Simulation implements ActionListener{
 		space.addKeyListener(new KeyManager()); // adds key listener to space
 		//space.addMouseListener(new MouseManager()); // adds mouse listener to space
 		
-		// earth moon
-		bodies.addBody(new double[]{500, 500, 0, 0, 5.972});
-		bodies.addBody(new double[]{884.4, 500, 0, (-1023 * Math.pow(10,  STS - SDS))*7.348E-2, 7.348E-2});
+		// earth moon -- SDS = 6, SMS = 24
+		//bodies.addBody(new double[]{500, 500, 0, 0, 5.972}, true);
+		//bodies.addBody(new double[]{884.4, 500, 0, (-1023 * Math.pow(10,  STS - SDS))*7.348E-2, 7.348E-2}, true);
+		
+		// r1(0) = -r3(0) = (-0.97000436, 0.24308753); r2(0) = (0,0); v1(0) = v3(0) = (0.4662036850, 0.4323657300); v2(0) = (-0.93240737, -0.86473146)
+		
+		double m = Math.sqrt(10/6.67);
+		
+		bodies.addBody(new double[]{-0.97000436*100 + 600, -0.24308753*100 + 500, m*0.4662036850*Math.pow(10, 3 + STS - SDS), m*-0.4323657300*Math.pow(10, 3 + STS - SDS), m}, true);
+		//bodies.addBody(new double[]{600, 500, 0, 0, m}, true);
+		bodies.addBody(new double[]{600, 500, m*-0.93240737*Math.pow(10, 3 + STS - SDS), m*0.86473146*Math.pow(10, 3 + STS - SDS), m}, true);
+		bodies.addBody(new double[]{0.97000436*100 + 600, 0.24308753*100 + 500, m*0.4662036850*Math.pow(10, 3 + STS - SDS), m*-0.4323657300*Math.pow(10, 3 + STS - SDS), m}, true);
+		
+		/*
+		bodies.addBody(new double[]{500, 500, 0, 0, m}, true);
+		bodies.addBody(new double[]{600, 500, 0, 0, m}, true);
+		bodies.addBody(new double[]{700, 500, m*0.3471128135672417*Math.pow(10, 3 + STS - SDS), m*-0.532726851767674*Math.pow(10, 3 + STS - SDS), m}, true);
+		*/
+		bodies.initializeAllMomenta();
 	}
 	
 	public void start() {
