@@ -1,15 +1,24 @@
 clear;clc;
 
+% this code likely wont work without an RK method with adaptive step sizes
+
+% export file name
+output_filename = 'test.gif';
+input_filename = 'three_body_parameters.csv';
+data = readtable(input_filename);
+
+index = 1;
+T = data.T0(index);
+
 % number of loops
-n = 1000;
+n = 10000;
 % normalized gravitational constant
 G = 1;
-% timestep (T ~= 6.32591398)
-dt = 0.1/(6.32591398);
+% timestep
+dt = 1/T;
 % length of trails
-trail_length = 80;
-% export file name
-filename = 'test.gif';
+trail_length = 150;
+
 
 % store all values so trails can be plotted
 size = 3;
@@ -22,10 +31,11 @@ Fq2 = [0, 0, 0];
 m = [1, 1, 1];
 
 % initial values
-Q1(1,:) = [-0.97000436, 0, 0.97000436];
-Q2(1,:) = [0.24308753, 0, -0.24308753];
-Pq1(1,:) = [0.4662036850, -0.93240737, 0.4662036850];
-Pq2(1,:) = [0.4323657300, -0.86473146, 0.4323657300];
+Q1(1,:) = [data.x1(index), -data.x1(index), 0];
+Q2(1,:) = [data.x2(index), -data.x2(index), 0];
+Pq1(1,:) = [data.v1(index), data.v1(index), -2 * data.v1(index)];
+Pq2(1,:) = [data.v2(index), data.v2(index), -2 * data.v2(index)];
+
 % perform reverse half Euler step at beginning
 flag = true;
 
@@ -42,7 +52,7 @@ for t = 2:n
                 distQ1 = Q1(t-1, j) - Q1(t-1, i);
 			    distQ2 = Q2(t-1, j) - Q2(t-1, i);
                 r = sqrt(distQ1*distQ1 + distQ2*distQ2);
-			    r = max(0.0001, r);
+			    %r = max(0.0001, r);
                 % calculate each component of force from each body and add
                 % to total
 			    Fq1(i) = Fq1(i) + G * m(j) * m(i) / (r * r * r) * distQ1;
@@ -97,9 +107,9 @@ for t = 2:n
     im = frame2im(frame);
     [imind,cm] = rgb2ind(im,256);
     if t == 2
-         imwrite(imind,cm,filename,'gif', 'Loopcount',inf);
+         imwrite(imind,cm,output_filename,'gif', 'Loopcount',inf);
     else
-         imwrite(imind,cm,filename,'gif','WriteMode','append', 'DelayTime', 0.02);
+         imwrite(imind,cm,output_filename,'gif','WriteMode','append', 'DelayTime', 0.02);
     end
 end
 
