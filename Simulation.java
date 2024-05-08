@@ -91,22 +91,22 @@ public class Simulation {
 	}
 
 	public void regenGraphics() throws InterruptedException {
-		if (isPaused()) {
-			space.repaint();
-			try {
-				service.invokeAll(Arrays.asList(physicsTasks));
-			} catch (InterruptedException ex) {
-				throw new RuntimeException(ex);
+		while (true) {
+			if (isPaused()) {
+				space.repaint();
+				try {
+					service.invokeAll(Arrays.asList(physicsTasks));
+				} catch (InterruptedException ex) {
+					throw new RuntimeException(ex);
+				}
+				bodies.iterate();
+				iterations++;
+				tPanel.updateLabel(iterations * dt * Math.pow(10, STS) / 3600 / 24);
 			}
-			bodies.iterate();
-			iterations++;
-			tPanel.updateLabel(iterations * dt * Math.pow(10, STS) / 3600 / 24);
+			synchronized (space) {
+				space.wait();
+			}
 		}
-		synchronized (space) {
-			space.wait();
-		}
-
-		regenGraphics();
 	}
 	
 	public boolean isPaused() {
