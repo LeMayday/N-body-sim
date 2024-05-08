@@ -6,7 +6,7 @@ import javax.swing.JPanel;
 
 // TimePanel displays the simulation time
 
-@SuppressWarnings("serial")
+//@SuppressWarnings("serial")
 public class TimePanel extends JPanel{
 
     private double time = 0;

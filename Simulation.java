@@ -1,29 +1,26 @@
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import javax.swing.Timer;
 
 // Simulation stores global variables and interfaces between computation and display
 
-public class Simulation implements ActionListener{
+public class Simulation {
 
 	public double dt = 10.0;
-	public long iters = 0;
-	private final Timer timer = new Timer(1, this);
-	public AppFrame frame;
-	public Space space;
+	public long iterations = 0;
+	private boolean paused;
+	public final AppFrame frame;
+	public final Space space;
 	private final TimePanel tPanel;
-	public CelestialBodies bodies;
+	public final CelestialBodies bodies;
     //conversion exponents
 	public final int SDS = 6; 	// simulation distance scale, 1 pixel (SDU) = 1e[SDS] m
 	public final int SMS = 24; 	// simulation mass scale, 1 SMU = 1e[SMS] kg
 	public final int STS = 1; 	// simulation time scale, 1 STU = 1e[STS] s
 
-	private final int NUM_THREADS = 8;
+	private final byte NUM_THREADS = 8;
 
 	private final ExecutorService service = Executors.newFixedThreadPool(NUM_THREADS);
 	private final CelestialBodies.PhysicsTask[] physicsTasks;
@@ -37,25 +34,26 @@ public class Simulation implements ActionListener{
 
 		physicsTasks = new CelestialBodies.PhysicsTask[NUM_THREADS];
 		createThreads();
-		
-		DataPanel dataPanel = new DataPanel(this);
-		//space.add(dataPanel);
 
 		tPanel = new TimePanel();
 		space.add(tPanel);
+
+		space.validate();
 		
 		//space.addMouseListener(new MouseManager()); // adds mouse listener to space
 		
 		// earth moon -- SDS = 6, SMS = 24
-		bodies.addBody(new double[]{500, 500, 0, 0, 5.972}, true);
-		bodies.addBody(new double[]{884.4, 500, 0, (-1023 * Math.pow(10,  STS - SDS))*7.348E-2, 7.348E-2}, true);
+//		bodies.addBody(new double[]{500, 500, 0, 0, 5.972}, true);
+//		bodies.addBody(new double[]{884.4, 500, 0, (-1023 * Math.pow(10,  STS - SDS))*7.348E-2, 7.348E-2}, true);
 		
 		bodies.initializeAllMomenta();
+
+		paused = false;
 	}
 
 	private void createThreads() {
-		for (int i = 0; i < NUM_THREADS; i++) {
-			physicsTasks[i] = bodies.new PhysicsTask("Thread " + i);
+		for (byte i = 0; i < NUM_THREADS; i++) {
+			physicsTasks[i] = bodies.new PhysicsTask();
 		}
 	}
 
@@ -82,18 +80,18 @@ public class Simulation implements ActionListener{
 			num_threads--;
 		}
 		// recursive call
-		int midpt = start + (end - start) / 2;
-		assign_physics_threads(Arrays.copyOfRange(idxs, 0, idxs.length / 2), num_threads / 2, start, midpt);
-		assign_physics_threads(Arrays.copyOfRange(idxs, idxs.length / 2, idxs.length), num_threads - num_threads / 2, midpt, end);
+		int midpoint = start + (end - start) / 2;
+		assign_physics_threads(Arrays.copyOfRange(idxs, 0, idxs.length / 2), num_threads / 2, start, midpoint);
+		assign_physics_threads(Arrays.copyOfRange(idxs, idxs.length / 2, idxs.length), num_threads - num_threads / 2, midpoint, end);
 	}
 
-	public void start() {
-		timer.start();
+	public void start() throws InterruptedException {
+		paused = true;
+		regenGraphics();
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() instanceof Timer){
+	public void regenGraphics() throws InterruptedException {
+		if (isPaused()) {
 			space.repaint();
 			try {
 				service.invokeAll(Arrays.asList(physicsTasks));
@@ -101,23 +99,28 @@ public class Simulation implements ActionListener{
 				throw new RuntimeException(ex);
 			}
 			bodies.iterate();
-			iters++;
-			tPanel.updateLabel(iters * dt * Math.pow(10, STS) / 3600 / 24);
-		}		
+			iterations++;
+			tPanel.updateLabel(iterations * dt * Math.pow(10, STS) / 3600 / 24);
+		}
+		synchronized (space) {
+			space.wait();
+		}
+
+		regenGraphics();
 	}
 	
-	public boolean isRunning() {
-		return timer.isRunning();
+	public boolean isPaused() {
+		return paused;
 	}
 	
 	// toggles simulation pause and manages changes in components
 	public void togglePause() {
-		if (isRunning()) {
-			timer.stop();
+		if (isPaused()) {
+			paused = false;
 			tPanel.togglePaused();
 		}
 		else {
-			timer.start();
+			paused = true;
 			tPanel.togglePaused();
 		}
 		tPanel.validate();
@@ -139,7 +142,7 @@ public class Simulation implements ActionListener{
 				//frame.toggleSliderPanel();
 				break;
 			default:
-				if (isRunning()) {
+				if (isPaused()) {
                     byte increment = 5;
                     bodies.incrementPositions(e, increment);
 				}
@@ -174,6 +177,3 @@ public class Simulation implements ActionListener{
 	*/
 	
 }
-	
-
-

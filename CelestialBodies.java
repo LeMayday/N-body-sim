@@ -40,20 +40,6 @@ public class CelestialBodies {
 		G = 6.67 * Math.pow(10, SGS);
 		sim = s;
 	}
-	
-//	// perform a full integration step
-//	public void iterate() {
-//		for (int i = 0; i < size; i++) {
-//			computeForcesOnBody(i);
-//		}
-//		computeVariables();
-//	}
-
-	private void computeForces(int ibegin, int iend) {
-		for (int i = ibegin; i < iend; i++) {
-			computeForcesOnBody(i);
-		}
-	}
 
 	public void iterate() {
 		computeVariables();
@@ -77,10 +63,10 @@ public class CelestialBodies {
 		// if bodies are all added at the beginning, want to initialize momenta together
 		if (!initializeAll) {
 			initializeMomenta(size);
+			sim.update_physics_indices();
 		}
 		// increment size
 		size++;
-		sim.update_physics_indices();
 	}
 	
 	// initializes all momenta after all bodies have been added
@@ -125,6 +111,12 @@ public class CelestialBodies {
 	// p(i+1/2) = p(i-1/2) + mA(x)dt
 	// x(i+1) = x(i) + p(i+1/2)/m dt
 	// q1 is x, q2 is y
+
+	private void computeForces(int ibegin, int iend) {
+		for (int i = ibegin; i < iend; i++) {
+			computeForcesOnBody(i);
+		}
+	}
 	
 	// compute force on body index from all other bodies and add it to forces array
 	private void computeForcesOnBody(int i) {
@@ -170,9 +162,7 @@ public class CelestialBodies {
 	private double[] push(double[] oldArr, double value) {
 		double[] tempArr = new double[size + 1];
 
-		for (int i = 0; i < size; i++) {
-			tempArr[i] = oldArr[i];
-		}
+        if (size >= 0) System.arraycopy(oldArr, 0, tempArr, 0, size);
 		tempArr[size] = value;
 		
 		return tempArr;
@@ -216,17 +206,10 @@ public class CelestialBodies {
 	// PhysicsTask is run by threads and calls integration methods in CelestialBodies
 	class PhysicsTask implements Callable<Void> {
 
-		private final String name;
 		private int ibegin;
 		private int iend;
 
-		PhysicsTask(String name) {
-			this.name = name;
-		}
-
-		public String getName() {
-			return this.name;
-		}
+		PhysicsTask() {}
 
 		public void assignIndices (int ibegin, int iend) {
 			this.ibegin = ibegin;
@@ -235,12 +218,12 @@ public class CelestialBodies {
 
 		@Override
 		public Void call() {
-			long currentTime = System.currentTimeMillis();
+			//long currentTime = System.currentTimeMillis();
 
 			computeForces(ibegin, iend);
 			//System.out.println(sim.bodies.getQ1(1));
 
-			long computeTime = System.currentTimeMillis() - currentTime;
+			//long computeTime = System.currentTimeMillis() - currentTime;
 			//System.out.println("Iteration took " + computeTime + " ms");
 
 			return null;

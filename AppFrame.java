@@ -6,13 +6,13 @@ import javax.swing.JFrame;
 
 // AppFrame serves as the graphical window and a container class to store all the panels
 
-@SuppressWarnings("serial")
+//@SuppressWarnings("serial")
 public class AppFrame extends JFrame {
 
 	public Space space;
 	private Dimension frameSize;
 	
-	// constructor initializes window and sub components and starts simulation timer
+	// constructor initializes window and subcomponents and starts simulation timer
 	public AppFrame(Simulation s) {
 		
 		// get screen dimensions to size frame appropriately

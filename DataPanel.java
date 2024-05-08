@@ -21,7 +21,7 @@ public class DataPanel extends JPanel{
 		this.setSize(new Dimension(width, height));
 		this.setOpaque(false);
 		
-		timeLabel = new JLabel("Simulation time: " + s.iters*s.dt + " s");
+		timeLabel = new JLabel("Simulation time: " + s.iterations *s.dt + " s");
 		timeLabel.setForeground(Color.white);
 		this.add(timeLabel);
 		
