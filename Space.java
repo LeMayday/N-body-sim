@@ -8,7 +8,7 @@ import javax.swing.JPanel;
 @SuppressWarnings("serial")
 public class Space extends JPanel {
 	
-	private CelestialBodies bodies;
+	private final CelestialBodies bodies;
 	
 	// constructor initializes space panel
 	public Space(Simulation s){
@@ -31,5 +31,4 @@ public class Space extends JPanel {
 			//System.out.println(bodies.getQ1(2) + " " + bodies.getQ2(2));
 		}
 	}
-
 }

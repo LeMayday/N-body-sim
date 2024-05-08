@@ -216,14 +216,16 @@ public class CelestialBodies {
 	// PhysicsTask is run by threads and calls integration methods in CelestialBodies
 	class PhysicsTask implements Callable<Void> {
 
-		private final Simulation sim;
 		private final String name;
 		private int ibegin;
 		private int iend;
 
-		PhysicsTask(Simulation s, String name) {
-			sim = s;
+		PhysicsTask(String name) {
 			this.name = name;
+		}
+
+		public String getName() {
+			return this.name;
 		}
 
 		public void assignIndices (int ibegin, int iend) {
@@ -241,9 +243,9 @@ public class CelestialBodies {
 			long computeTime = System.currentTimeMillis() - currentTime;
 			//System.out.println("Iteration took " + computeTime + " ms");
 
-			sim.iters++;
-			//System.out.println(sim.iters);
 			return null;
 		}
+
 	}
+
 }

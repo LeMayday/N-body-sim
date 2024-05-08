@@ -10,9 +10,6 @@ import javax.swing.JFrame;
 public class AppFrame extends JFrame {
 
 	public Space space;
-	//private SliderPanel sPanel;
-	//private InstructionPanel iPanel;
-	//private TimePanel tPanel;
 	private Dimension frameSize;
 	
 	// constructor initializes window and sub components and starts simulation timer

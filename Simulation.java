@@ -14,9 +14,9 @@ public class Simulation implements ActionListener{
 	public double dt = 10.0;
 	public long iters = 0;
 	private final Timer timer = new Timer(1, this);
-	private boolean isRunning = false;
 	public AppFrame frame;
 	public Space space;
+	private final TimePanel tPanel;
 	public CelestialBodies bodies;
     //conversion exponents
 	public final int SDS = 6; 	// simulation distance scale, 1 pixel (SDU) = 1e[SDS] m
@@ -39,20 +39,23 @@ public class Simulation implements ActionListener{
 		createThreads();
 		
 		DataPanel dataPanel = new DataPanel(this);
-		space.add(dataPanel);
+		//space.add(dataPanel);
+
+		tPanel = new TimePanel();
+		space.add(tPanel);
 		
 		//space.addMouseListener(new MouseManager()); // adds mouse listener to space
 		
 		// earth moon -- SDS = 6, SMS = 24
-		//bodies.addBody(new double[]{500, 500, 0, 0, 5.972}, true);
-		//bodies.addBody(new double[]{884.4, 500, 0, (-1023 * Math.pow(10,  STS - SDS))*7.348E-2, 7.348E-2}, true);
+		bodies.addBody(new double[]{500, 500, 0, 0, 5.972}, true);
+		bodies.addBody(new double[]{884.4, 500, 0, (-1023 * Math.pow(10,  STS - SDS))*7.348E-2, 7.348E-2}, true);
 		
 		bodies.initializeAllMomenta();
 	}
 
 	private void createThreads() {
 		for (int i = 0; i < NUM_THREADS; i++) {
-			physicsTasks[i] = bodies.new PhysicsTask(this, "Thread " + i);
+			physicsTasks[i] = bodies.new PhysicsTask("Thread " + i);
 		}
 	}
 
@@ -85,7 +88,6 @@ public class Simulation implements ActionListener{
 	}
 
 	public void start() {
-		isRunning = true;
 		timer.start();
 	}
 
@@ -93,31 +95,33 @@ public class Simulation implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() instanceof Timer){
 			space.repaint();
-			for (int i = 0; i < NUM_THREADS; i++) {
-                try {
-                    service.invokeAll(Arrays.asList(physicsTasks));
-                } catch (InterruptedException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
+			try {
+				service.invokeAll(Arrays.asList(physicsTasks));
+			} catch (InterruptedException ex) {
+				throw new RuntimeException(ex);
+			}
 			bodies.iterate();
+			iters++;
+			tPanel.updateLabel(iters * dt * Math.pow(10, STS) / 3600 / 24);
 		}		
 	}
 	
 	public boolean isRunning() {
-		return isRunning;
+		return timer.isRunning();
 	}
 	
 	// toggles simulation pause and manages changes in components
 	public void togglePause() {
-		if (isRunning) {
-			isRunning = false;
-			//tPanel.togglePaused(simRunning);
+		if (isRunning()) {
+			timer.stop();
+			tPanel.togglePaused();
 		}
 		else {
-			isRunning = true;
-			//tPanel.togglePaused(simRunning);
+			timer.start();
+			tPanel.togglePaused();
 		}
+		tPanel.validate();
+		space.repaint(tPanel.getX(), tPanel.getY(), tPanel.getWidth(), tPanel.getHeight());
 	}
 	
 	private class KeyManager extends KeyAdapter {

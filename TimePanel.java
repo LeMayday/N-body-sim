@@ -8,15 +8,16 @@ import javax.swing.JPanel;
 
 @SuppressWarnings("serial")
 public class TimePanel extends JPanel{
-	
-	private int width = 200, height = 50;
-	private double time = 0;
-	private JLabel timeLabel;
-	private JLabel pausedLabel;
+
+    private double time = 0;
+	private final JLabel timeLabel;
+	private final JLabel pausedLabel;
 	
 	// constructor initializes time panel and label components
 	public TimePanel() {
-		this.setSize(new Dimension(width, height));
+        int width = 200;
+        int height = 50;
+        this.setSize(new Dimension(width, height));
 		this.setOpaque(false);
 		
 		timeLabel = new JLabel("Simulation time: " + time + " s");
@@ -35,15 +36,12 @@ public class TimePanel extends JPanel{
 	}
 	
 	// toggles pausedLabel visibility (called from AppFrame)
-	public void togglePaused(boolean simRunning) {
-		if(!simRunning) {
+	public void togglePaused() {
+		if (pausedLabel.getParent() == null) {
 			this.add(pausedLabel);
-			simRunning = false;
+			return;
 		}
-		else {
-			this.remove(pausedLabel);
-			simRunning = true;
-		}
+		this.remove(pausedLabel);
 	}
 	
 }
