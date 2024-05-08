@@ -7,10 +7,10 @@ public class Main {
 		Simulation sim = new Simulation();
 		sim.start();
 		
-		//sim.bodies.clear();
+		sim.bodies.clear();
 		double Ri, Thi, Pxi, Pyi;
 		double mass = 1.0;
-		for (int i = 0; i < 0; i++){ //generates random bodies scattered in a circle centered at the middle of the screen
+		for (int i = 0; i < 10; i++){ //generates random bodies scattered in a circle centered at the middle of the screen
 			int x0 = sim.frame.getFrameSize().width/2;
 			int y0 = sim.frame.getFrameSize().height/2;
 			

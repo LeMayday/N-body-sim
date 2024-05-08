@@ -2,8 +2,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.swing.Timer;
@@ -14,48 +13,77 @@ public class Simulation implements ActionListener{
 
 	public double dt = 10.0;
 	public long iters = 0;
-	private Timer timer = new Timer(1, this);;
+	private final Timer timer = new Timer(1, this);
 	private boolean isRunning = false;
 	public AppFrame frame;
 	public Space space;
 	public CelestialBodies bodies;
-	private byte increment = 5;
-	//conversion exponents
+    //conversion exponents
 	public final int SDS = 6; 	// simulation distance scale, 1 pixel (SDU) = 1e[SDS] m
 	public final int SMS = 24; 	// simulation mass scale, 1 SMU = 1e[SMS] kg
-	public final int STS = 2; 	// simulation time scale, 1 STU = 1e[STS] s
-	
-	private ExecutorService service = Executors.newSingleThreadExecutor();
-	private WorkTask task = new WorkTask(this);
+	public final int STS = 1; 	// simulation time scale, 1 STU = 1e[STS] s
+
+	private final int NUM_THREADS = 8;
+
+	private final ExecutorService service = Executors.newFixedThreadPool(NUM_THREADS);
+	private final CelestialBodies.PhysicsTask[] physicsTasks;
+	//private PhysicsTask task = new PhysicsTask(this);
 	
 	public Simulation() {
 		bodies = new CelestialBodies(this, new int[] {SDS, SMS, STS});
 		space = new Space(this);
 		frame = new AppFrame(this);
 		space.addKeyListener(new KeyManager()); // adds key listener to space
+
+		physicsTasks = new CelestialBodies.PhysicsTask[NUM_THREADS];
+		createThreads();
+		
+		DataPanel dataPanel = new DataPanel(this);
+		space.add(dataPanel);
+		
 		//space.addMouseListener(new MouseManager()); // adds mouse listener to space
 		
 		// earth moon -- SDS = 6, SMS = 24
 		//bodies.addBody(new double[]{500, 500, 0, 0, 5.972}, true);
 		//bodies.addBody(new double[]{884.4, 500, 0, (-1023 * Math.pow(10,  STS - SDS))*7.348E-2, 7.348E-2}, true);
 		
-		// r1(0) = -r3(0) = (-0.97000436, 0.24308753); r2(0) = (0,0); v1(0) = v3(0) = (0.4662036850, 0.4323657300); v2(0) = (-0.93240737, -0.86473146)
-		
-		double m = Math.sqrt(10/6.67);
-		
-		bodies.addBody(new double[]{-0.97000436*100 + 600, -0.24308753*100 + 500, m*0.4662036850*Math.pow(10, 3 + STS - SDS), m*-0.4323657300*Math.pow(10, 3 + STS - SDS), m}, true);
-		//bodies.addBody(new double[]{600, 500, 0, 0, m}, true);
-		bodies.addBody(new double[]{600, 500, m*-0.93240737*Math.pow(10, 3 + STS - SDS), m*0.86473146*Math.pow(10, 3 + STS - SDS), m}, true);
-		bodies.addBody(new double[]{0.97000436*100 + 600, 0.24308753*100 + 500, m*0.4662036850*Math.pow(10, 3 + STS - SDS), m*-0.4323657300*Math.pow(10, 3 + STS - SDS), m}, true);
-		
-		/*
-		bodies.addBody(new double[]{500, 500, 0, 0, m}, true);
-		bodies.addBody(new double[]{600, 500, 0, 0, m}, true);
-		bodies.addBody(new double[]{700, 500, m*0.3471128135672417*Math.pow(10, 3 + STS - SDS), m*-0.532726851767674*Math.pow(10, 3 + STS - SDS), m}, true);
-		*/
 		bodies.initializeAllMomenta();
 	}
-	
+
+	private void createThreads() {
+		for (int i = 0; i < NUM_THREADS; i++) {
+			physicsTasks[i] = bodies.new PhysicsTask(this, "Thread " + i);
+		}
+	}
+
+	// main method for updating indices for each thread
+	public void update_physics_indices() {
+		// https://stackoverflow.com/a/16020807
+		byte[] index_list = new byte[NUM_THREADS];
+		for (byte i = 0; i < NUM_THREADS; index_list[i] = i++);
+		assign_physics_threads(index_list, NUM_THREADS, 0, bodies.size);
+	}
+
+	private void assign_physics_threads(byte[] idxs, int num_threads, int start, int end) {
+		// base case: if there's only one thread left to assign
+		if (num_threads == 1) {
+			physicsTasks[idxs[0]].assignIndices(start, end);
+			return;
+		}
+		// needed to correctly balance assignments for odd numbers of threads
+		if (num_threads % 2 == 1) {
+			int end_temp = start + (end - start) / num_threads;
+			physicsTasks[idxs[0]].assignIndices(start, end_temp);
+			start = end_temp;
+			idxs = Arrays.copyOfRange(idxs, 1, idxs.length);
+			num_threads--;
+		}
+		// recursive call
+		int midpt = start + (end - start) / 2;
+		assign_physics_threads(Arrays.copyOfRange(idxs, 0, idxs.length / 2), num_threads / 2, start, midpt);
+		assign_physics_threads(Arrays.copyOfRange(idxs, idxs.length / 2, idxs.length), num_threads - num_threads / 2, midpt, end);
+	}
+
 	public void start() {
 		isRunning = true;
 		timer.start();
@@ -65,7 +93,14 @@ public class Simulation implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() instanceof Timer){
 			space.repaint();
-			service.submit(task);
+			for (int i = 0; i < NUM_THREADS; i++) {
+                try {
+                    service.invokeAll(Arrays.asList(physicsTasks));
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+			bodies.iterate();
 		}		
 	}
 	
@@ -101,7 +136,8 @@ public class Simulation implements ActionListener{
 				break;
 			default:
 				if (isRunning()) {
-					bodies.incrementPositions(e, increment);
+                    byte increment = 5;
+                    bodies.incrementPositions(e, increment);
 				}
 			}
 		}

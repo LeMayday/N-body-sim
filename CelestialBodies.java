@@ -1,4 +1,5 @@
 import java.awt.event.KeyEvent;
+import java.util.concurrent.Callable;
 
 // https://en.wikipedia.org/wiki/Hamiltonian_Monte_Carlo
 // https://young.physics.ucsc.edu/115/leapfrog.pdf
@@ -26,25 +27,35 @@ public class CelestialBodies {
 	private double[] masses = new double[size];
 	
 	private final double G;
-	private final int SDS, SMS, STS, SGS; // SGS is simulation gravitational scale
-	private Simulation sim;
+	//private final int SDS, SMS, STS, SGS; // SGS is simulation gravitational scale
+	private final Simulation sim;
 		
 	public CelestialBodies(Simulation s, int[] scales) {
-		SDS = scales[0];
-		SMS = scales[1];
-		STS = scales[2];
-		SGS = -11 - SDS*3 + SMS + STS*2;
+		int SDS = scales[0];
+		int SMS = scales[1];
+		int STS = scales[2];
+		int SGS = -11 - SDS*3 + SMS + STS*2;
 		// derived from SI units for G (m^3/(kg*s^2)), with 1 SDU = [SDS] m, 1 SMU = [SMS] kg, 1 STU = [STS] s
 		// so Gsim (SDU^3/(SMU*STU^2)) = G * (1e-SDS)^3 * 1eSMS * (1eSTS)^2
 		G = 6.67 * Math.pow(10, SGS);
 		sim = s;
 	}
 	
-	// perform a full integration step
-	public void iterate() {
-		for (int i = 0; i < size; i++) {
+//	// perform a full integration step
+//	public void iterate() {
+//		for (int i = 0; i < size; i++) {
+//			computeForcesOnBody(i);
+//		}
+//		computeVariables();
+//	}
+
+	private void computeForces(int ibegin, int iend) {
+		for (int i = ibegin; i < iend; i++) {
 			computeForcesOnBody(i);
 		}
+	}
+
+	public void iterate() {
 		computeVariables();
 	}
 	
@@ -69,6 +80,7 @@ public class CelestialBodies {
 		}
 		// increment size
 		size++;
+		sim.update_physics_indices();
 	}
 	
 	// initializes all momenta after all bodies have been added
@@ -117,7 +129,7 @@ public class CelestialBodies {
 	// compute force on body index from all other bodies and add it to forces array
 	private void computeForcesOnBody(int i) {
 		// contribution from body j
-		double distQ1 = 0, distQ2 = 0, r = 0, gradUq1 = 0, gradUq2 = 0;
+		double distQ1, distQ2, r, gradUq1 = 0, gradUq2 = 0;
 		for (int j = 0; j < size; j++) {
 			if (i != j) {
 				distQ1 = Q1[j] - Q1[i];
@@ -157,7 +169,7 @@ public class CelestialBodies {
 	// push one element to end of oldArr
 	private double[] push(double[] oldArr, double value) {
 		double[] tempArr = new double[size + 1];
-		
+
 		for (int i = 0; i < size; i++) {
 			tempArr[i] = oldArr[i];
 		}
@@ -199,5 +211,39 @@ public class CelestialBodies {
 			}
 		}
 		
+	}
+
+	// PhysicsTask is run by threads and calls integration methods in CelestialBodies
+	class PhysicsTask implements Callable<Void> {
+
+		private final Simulation sim;
+		private final String name;
+		private int ibegin;
+		private int iend;
+
+		PhysicsTask(Simulation s, String name) {
+			sim = s;
+			this.name = name;
+		}
+
+		public void assignIndices (int ibegin, int iend) {
+			this.ibegin = ibegin;
+			this.iend = iend;
+		}
+
+		@Override
+		public Void call() {
+			long currentTime = System.currentTimeMillis();
+
+			computeForces(ibegin, iend);
+			//System.out.println(sim.bodies.getQ1(1));
+
+			long computeTime = System.currentTimeMillis() - currentTime;
+			//System.out.println("Iteration took " + computeTime + " ms");
+
+			sim.iters++;
+			//System.out.println(sim.iters);
+			return null;
+		}
 	}
 }

@@ -9,7 +9,7 @@ import javax.swing.JFrame;
 @SuppressWarnings("serial")
 public class AppFrame extends JFrame {
 
-	private Space space;
+	public Space space;
 	//private SliderPanel sPanel;
 	//private InstructionPanel iPanel;
 	//private TimePanel tPanel;
