@@ -1,4 +1,5 @@
 import java.awt.event.KeyEvent;
+import java.util.Random;
 import java.util.concurrent.Callable;
 
 // https://en.wikipedia.org/wiki/Hamiltonian_Monte_Carlo
@@ -27,10 +28,10 @@ public class CelestialBodies {
 	private double[] masses = new double[size];
 	
 	private final double G;
+	private double dt;
 	//private final int SDS, SMS, STS, SGS; // SGS is simulation gravitational scale
-	private final Simulation sim;
 		
-	public CelestialBodies(Simulation s, int[] scales) {
+	public CelestialBodies(int[] scales, double dt) {
 		int SDS = scales[0];
 		int SMS = scales[1];
 		int STS = scales[2];
@@ -38,7 +39,7 @@ public class CelestialBodies {
 		// derived from SI units for G (m^3/(kg*s^2)), with 1 SDU = [SDS] m, 1 SMU = [SMS] kg, 1 STU = [STS] s
 		// so Gsim (SDU^3/(SMU*STU^2)) = G * (1e-SDS)^3 * 1eSMS * (1eSTS)^2
 		G = 6.67 * Math.pow(10, SGS);
-		sim = s;
+		this.dt = dt;
 	}
 
 	public void iterate() {
@@ -63,10 +64,31 @@ public class CelestialBodies {
 		// if bodies are all added at the beginning, want to initialize momenta together
 		if (!initializeAll) {
 			initializeMomenta(size);
-			sim.update_physics_indices();
 		}
 		// increment size
 		size++;
+	}
+
+	public void generateRandomBodies(int numRandomBodies, int x0, int y0, double velocityScale) {
+		clearAndInitialize(numRandomBodies);
+		double Ri, Thi, Pxi, Pyi;
+		double mass = 0.1;
+		Random random = new Random();
+		for (int i = 0; i < numRandomBodies; i++){ //generates random bodies scattered in a circle centered at the middle of the screen
+			Ri = random.nextDouble()*900;
+			Thi = random.nextDouble()*2*Math.PI;
+
+			double xVel = random.nextDouble() * (random.nextBoolean() ? -1 : 1) * velocityScale;
+			double yVel = random.nextDouble() * (random.nextBoolean() ? -1 : 1) * velocityScale;
+			Pxi = mass * xVel;
+			Pyi = mass * yVel;
+
+			Q1[i] = Ri * Math.cos(Thi) + x0;
+			Q2[i] = Ri * Math.sin(Thi) + y0;
+			Pq1[i] = Pxi;
+			Pq2[i] = Pyi;
+			masses[i] = mass;
+		}
 	}
 	
 	// initializes all momenta after all bodies have been added
@@ -79,7 +101,11 @@ public class CelestialBodies {
 	}
 	
 	public void clear() {
-		size = 0;
+		clearAndInitialize(0);
+	}
+
+	private void clearAndInitialize(int size) {
+		this.size = size;
 		Q1 = new double[size];
 		Q2 = new double[size];
 		Pq1 = new double[size];
@@ -102,8 +128,8 @@ public class CelestialBodies {
 		// https://young.physics.ucsc.edu/115/leapfrog.pdf pg 3 (bottom)
 		// momenta are given for t = 0, so need to do a half step of Euler to get t = -1/2
 		computeForcesOnBody(index);
-		Pq1[index] -= 0.5 * Fq1[index] * sim.dt;
-		Pq2[index] -= 0.5 * Fq2[index] * sim.dt;
+		Pq1[index] -= 0.5 * Fq1[index] * dt;
+		Pq2[index] -= 0.5 * Fq2[index] * dt;
 	}
 	
 	// pseudo-code:
@@ -144,10 +170,10 @@ public class CelestialBodies {
 	private void computeVariables() {
 		// no need for two separate arrays with old and new values since all the force computations are done first
 		for (int i = 0; i < size; i++) {
-			Pq1[i] += Fq1[i] * sim.dt;
-			Pq2[i] += Fq2[i] * sim.dt;
-			Q1[i] += Pq1[i] / masses[i] * sim.dt;
-			Q2[i] += Pq2[i] / masses[i] * sim.dt;			
+			Pq1[i] += Fq1[i] * dt;
+			Pq2[i] += Fq2[i] * dt;
+			Q1[i] += Pq1[i] / masses[i] * dt;
+			Q2[i] += Pq2[i] / masses[i] * dt;
 		}
 		/*
 		if (size >= 2) {
@@ -218,13 +244,12 @@ public class CelestialBodies {
 
 		@Override
 		public Void call() {
-			//long currentTime = System.currentTimeMillis();
+			long currentTime = System.currentTimeMillis();
 
 			computeForces(ibegin, iend);
-			//System.out.println(sim.bodies.getQ1(1));
 
-			//long computeTime = System.currentTimeMillis() - currentTime;
-			//System.out.println("Iteration took " + computeTime + " ms");
+			long computeTime = System.currentTimeMillis() - currentTime;
+			System.out.println("Iteration took " + computeTime + " ms");
 
 			return null;
 		}
