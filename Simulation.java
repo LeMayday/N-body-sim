@@ -1,6 +1,7 @@
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.Arrays;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,8 +23,11 @@ public class Simulation {
 
 	private final byte NUM_THREADS = 8;
 
-	private final ExecutorService service = Executors.newFixedThreadPool(NUM_THREADS);
+	private final ExecutorService physicsService = Executors.newFixedThreadPool(NUM_THREADS);
 	private final CelestialBodies.PhysicsTask[] physicsTasks;
+
+	private final ExecutorService renderService = Executors.newSingleThreadExecutor();
+	private final ScreenRenderer renderTask = new ScreenRenderer();
 	
 	public Simulation() {
 		bodies = new CelestialBodies(new int[] {SDS, SMS, STS}, dt);
@@ -31,23 +35,39 @@ public class Simulation {
 		frame = new AppFrame(this);
 		space.addKeyListener(new KeyManager()); // adds key listener to space
 
-		physicsTasks = new CelestialBodies.PhysicsTask[NUM_THREADS];
-		createThreads();
-
 		tPanel = new TimePanel();
 		space.add(tPanel);
-
 		space.validate();
 		
 		//space.addMouseListener(new MouseManager()); // adds mouse listener to space
-		
-//		 earth moon -- SDS = 6, SMS = 24
-//		addBody(new double[]{500, 500, 0, 0, 5.972}, true);
-//		addBody(new double[]{884.4, 500, 0, (-1023 * Math.pow(10,  STS - SDS))*7.348E-2, 7.348E-2}, true);
-		
-		bodies.initializeAllMomenta();
 
 		paused = true;
+		physicsTasks = new CelestialBodies.PhysicsTask[NUM_THREADS];
+		for (byte i = 0; i < NUM_THREADS; i++) {
+			physicsTasks[i] = bodies.new PhysicsTask();
+		}
+	}
+
+	public void start() {
+		paused = false;
+		simLoop();
+	}
+
+	public void simLoop() {
+		while (true) {
+			if (!paused) {
+				renderService.submit(renderTask);
+				try {
+					physicsService.invokeAll(Arrays.asList(physicsTasks));
+				} catch (InterruptedException ex) {
+					throw new RuntimeException(ex);
+				}
+				System.out.println("Done Compute");
+				bodies.iterate();
+				iterations++;
+				tPanel.updateLabel(iterations * dt * Math.pow(10, STS) / 3600 / 24);
+			}
+		}
 	}
 
 	public void addBody(double[] params, boolean initializeAll) {
@@ -63,12 +83,6 @@ public class Simulation {
 		bodies.initializeAllMomenta();
 		update_physics_indices();
 		//togglePause();
-	}
-
-	private void createThreads() {
-		for (byte i = 0; i < NUM_THREADS; i++) {
-			physicsTasks[i] = bodies.new PhysicsTask();
-		}
 	}
 
 	// main method for updating indices for each thread
@@ -98,35 +112,10 @@ public class Simulation {
 		assign_physics_threads(Arrays.copyOfRange(idxs, 0, idxs.length / 2), num_threads / 2, start, midpoint);
 		assign_physics_threads(Arrays.copyOfRange(idxs, idxs.length / 2, idxs.length), num_threads - num_threads / 2, midpoint, end);
 	}
-
-	public void start() {
-		paused = false;
-		regenGraphics();
-	}
-
-	private void regenGraphics() {
-		while (true) {
-			if (simRunning()) {
-				space.repaint();
-				try {
-					service.invokeAll(Arrays.asList(physicsTasks));
-				} catch (InterruptedException ex) {
-					throw new RuntimeException(ex);
-				}
-				bodies.iterate();
-				iterations++;
-				tPanel.updateLabel(iterations * dt * Math.pow(10, STS) / 3600 / 24);
-			}
-		}
-	}
-	
-	public boolean simRunning() {
-		return !paused;
-	}
 	
 	// toggles simulation pause and manages changes in components
 	public void togglePause() {
-		if (simRunning()) {
+		if (!paused) {
 			paused = true;
 			tPanel.togglePaused();
 		}
@@ -153,7 +142,7 @@ public class Simulation {
 				//frame.toggleSliderPanel();
 				break;
 			default:
-				if (simRunning()) {
+				if (!paused) {
                     byte increment = 5;
                     bodies.incrementPositions(e, increment);
 				}
@@ -186,5 +175,14 @@ public class Simulation {
 		}
 	}
 	*/
-	
+
+	class ScreenRenderer implements Callable<Void> {
+
+		@Override
+		public Void call() {
+			space.repaint();
+			return null;
+		}
+	}
+
 }

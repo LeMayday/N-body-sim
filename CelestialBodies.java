@@ -72,7 +72,7 @@ public class CelestialBodies {
 	public void generateRandomBodies(int numRandomBodies, int x0, int y0, double velocityScale) {
 		clearAndInitialize(numRandomBodies);
 		double Ri, Thi, Pxi, Pyi;
-		double mass = 0.1;
+		double mass = 1.0;
 		Random random = new Random();
 		for (int i = 0; i < numRandomBodies; i++){ //generates random bodies scattered in a circle centered at the middle of the screen
 			Ri = random.nextDouble()*900;
@@ -244,13 +244,7 @@ public class CelestialBodies {
 
 		@Override
 		public Void call() {
-			long currentTime = System.currentTimeMillis();
-
 			computeForces(ibegin, iend);
-
-			long computeTime = System.currentTimeMillis() - currentTime;
-			System.out.println("Iteration took " + computeTime + " ms");
-
 			return null;
 		}
 

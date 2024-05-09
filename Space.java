@@ -1,7 +1,6 @@
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.JPanel;
 
 // Space is the main panel on which the bodies are drawn
@@ -10,8 +9,6 @@ import javax.swing.JPanel;
 public class Space extends JPanel {
 	
 	private final CelestialBodies bodies;
-	public boolean isRendering = true;
-	private final ReentrantLock lock = new ReentrantLock();
 	
 	// constructor initializes space panel
 	public Space(Simulation s){
@@ -24,19 +21,15 @@ public class Space extends JPanel {
 	
 	@Override // overrides JPanel paint method
 	public void paintComponent(Graphics g){
-		lock.lock();
-		try {
-			super.paintComponent(g); //super for JPanel
-			Graphics2D g2D = (Graphics2D) g;
+		super.paintComponent(g); //super for JPanel
+		Graphics2D g2D = (Graphics2D) g;
 
-			for (int i = 0; i < bodies.size; i++) { // draws bodies
-				g2D.setColor(Color.cyan);
-				g2D.fillOval((int) (bodies.getQ1(i) - bodies.radius), (int) (bodies.getQ2(i) - bodies.radius), bodies.radius * 2, bodies.radius * 2);
-				//g2D.drawLine((int)bodies.getQ1(i), (int)bodies.getQ2(i), (int)(bodies.getQ1(i) + bodies.Fq1[i]*5E5), (int)(bodies.getQ2(i) + bodies.Fq2[i]*5E5));
-			}
-		} finally {
-			lock.unlock();
+		for (int i = 0; i < bodies.size; i++) { // draws bodies
+			g2D.setColor(Color.cyan);
+			g2D.fillOval((int) (bodies.getQ1(i) - bodies.radius), (int) (bodies.getQ2(i) - bodies.radius), bodies.radius * 2, bodies.radius * 2);
+			//g2D.drawLine((int)bodies.getQ1(i), (int)bodies.getQ2(i), (int)(bodies.getQ1(i) + bodies.Fq1[i]*5E5), (int)(bodies.getQ2(i) + bodies.Fq2[i]*5E5));
 		}
+		System.out.println("Done Render");
 		// https://docs.oracle.com/javase/tutorial/essential/concurrency/locksync.html
 		// synchronized with Simulation.regenGraphics() to allow graphics to process after every iteration
 		// otherwise, repaint() can collapse successive calls into one
